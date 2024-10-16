@@ -110,8 +110,7 @@ const poolOpts = {
 
 const pool = new NPool(poolOpts);
 
-const main = async (npub: string) => {
-    const pubkey = decodeNpub(npub);
+const main = async (pubkey: string) => {
     const feed = new Feed({
         title: "Nostr Notification",
         id: pubkey,
@@ -154,9 +153,15 @@ const main = async (npub: string) => {
 
 export default {
     async fetch(request: Request, _env: unknown) {
+        const url = new URL(request.url);
+        let pubkey;
         try {
-            const url = new URL(request.url);
-            return new Response(await main(url.pathname.substring(1)));
+            pubkey = decodeNpub(url.pathname.substring(1));
+        } catch {
+            return new Response(`usage: ${url.origin}/npub1...`);
+        }
+        try {
+            return new Response(await main(pubkey));
         } catch (e) {
             return new Response(`internal error: ${e}`);
         }
